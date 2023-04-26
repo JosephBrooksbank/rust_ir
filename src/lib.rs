@@ -2,9 +2,9 @@ pub(crate) use std::time;
 use std::u128;
 
 /// Send the given hex string along to the output_pin_control- true when it should be on, false when off.
-pub fn send_ir_hex_nec_protocol<F>(hex_string: &str, output_pin_control: F)
+pub fn send_ir_hex_nec_protocol<F>(hex_string: &str, mut output_pin_control: F)
 where
-    F: Fn(bool),
+    F: FnMut(bool),
 {
     let without_prefix = hex_string.trim_start_matches("0x");
     // Number of bits to process = 4 per hex val
@@ -18,20 +18,20 @@ where
 
     for _n in 0..num_bits {
         match get_next_value_and_move_pointer(&mut input_bits) {
-            true => send_one(&output_pin_control),
-            false => send_zero(&output_pin_control)
+            true => send_one(&mut output_pin_control),
+            false => send_zero(&mut output_pin_control)
         }
     }
 }
 
-fn send_zero<F>(pin_control: F) where F: Fn(bool) {
+fn send_zero<F>( pin_control: &mut F) where F: FnMut(bool) {
     pin_control(true);
     wait_for_time(562.5);
     pin_control(false);
     wait_for_time(562.5);
 }
 
-fn send_one<F>(pin_control: F) where F: Fn(bool) {
+fn send_one<F>( pin_control: &mut F) where F: FnMut(bool) {
     pin_control(true);
     wait_for_time(562.5);
     pin_control (false);
